@@ -1,138 +1,46 @@
-/* Reset per Mobile (evita zoom e rimbalzi dello schermo) */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
-}
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stasera, serata tranquilla - Cosarium</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-body {
-    background-color: #f7f4eb; /* Panna di sfondo del sito */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    font-family: monospace;
-    overflow: hidden;
-}
+    <div id="magoo-boy">
+        <div id="screen-container">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            
+            <div id="loading-screen" class="hidden">
+                <div class="loader-content">
+                    <p class="blink">ATTRAVERSAMENTO SOTTOPASSO...</p>
+                </div>
+            </div>
+        </div>
 
-/* La Scocca del Game Boy */
-#magoo-boy {
-    width: 100vw;
-    max-width: 420px;
-    height: 100vh;
-    max-height: 800px;
-    border: 4px solid #ff5500; /* Arancione Brand */
-    background-color: #f7f4eb;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    justify-content: space-between;
-    position: relative;
-}
+        <div id="crt-monitor">
+            <div class="crt-line">PASSI COMPLUTI: <span id="step-count">00000</span></div>
+            <div class="crt-line">CARBURANTE ALCOOL: <span id="alcohol-level">100%</span></div>
+            <div class="crt-line">VITE: <span id="lives-display">❤️❤️❤️</span></div>
+        </div>
 
-/* Schermo Quadrato */
-#screen-container {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    border: 4px solid #ff5500;
-    background-color: #000;
-    position: relative;
-    overflow: hidden;
-}
+        <div id="controls">
+            <div id="d-pad">
+                <div class="pad-btn up" id="pad-up"></div>
+                <div class="pad-btn left" id="pad-left"></div>
+                <div class="pad-btn right" id="pad-right"></div>
+                <div class="pad-btn down" id="pad-down"></div>
+                <div class="pad-center"></div>
+            </div>
 
-#gameCanvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-    image-rendering: pixelated;
-}
+            <div id="action-buttons">
+                <button id="btn-b" class="action-btn">B</button>
+                <button id="btn-a" class="action-btn">A</button>
+            </div>
+        </div>
+    </div>
 
-/* Schermata Caricamento Sottopasso */
-#loading-screen {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-color: #000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #ff5500;
-    z-index: 10;
-}
-
-.hidden { display: none !important; }
-
-/* Display Smartwatch */
-#smartwatch-display {
-    width: 100%;
-    border: 2px dashed #ff5500;
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
-    color: #ff5500;
-    font-weight: bold;
-    font-size: 1.2rem;
-}
-
-/* Pannello Controlli */
-#controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    height: 200px;
-    padding: 10px 0;
-}
-
-/* D-PAD Geometrico */
-#d-pad {
-    position: relative;
-    width: 120px;
-    height: 120px;
-}
-
-.pad-btn {
-    position: absolute;
-    background-color: #f7f4eb;
-    border: 3px solid #ff5500;
-}
-
-.pad-center {
-    position: absolute;
-    top: 40px; left: 40px; width: 40px; height: 40px;
-    background-color: #f7f4eb;
-    border-top: none; border-bottom: none;
-}
-
-.up { top: 0; left: 40px; width: 40px; height: 45px; border-bottom: none; border-radius: 5px 5px 0 0; }
-.down { bottom: 0; left: 40px; width: 40px; height: 45px; border-top: none; border-radius: 0 0 5px 5px; }
-.left { top: 40px; left: 0; width: 45px; height: 40px; border-right: none; border-radius: 5px 0 0 5px; }
-.right { top: 40px; right: 0; width: 45px; height: 40px; border-left: none; border-radius: 0 5px 5px 0; }
-
-.pad-btn:active { background-color: #ff5500; }
-
-/* Tasti A / B */
-#action-buttons {
-    display: flex;
-    gap: 20px;
-    transform: rotate(-15deg);
-}
-
-.action-btn {
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    border: 3px solid #ff5500;
-    background-color: #f7f4eb;
-    color: #ff5500;
-    font-size: 1.4rem;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.action-btn:active {
-    background-color: #ff5500;
-    color: #f7f4eb;
-}
+    <script src="script.js"></script>
+</body>
+</html>
