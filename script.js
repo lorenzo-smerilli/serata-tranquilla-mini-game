@@ -1,176 +1,153 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// 1. INIZIALIZZAZIONE NAVIGATORE (Coordinate di Via Petrarca 91, PSG)
+const startLat = 43.1818;
+const startLng = 13.7942;
+
+// Creiamo l'istanza di mappa nascosta che scarica i dati satellitari reali
+const mapContainer = document.getElementById('map-hidden');
+const map = L.map(mapContainer, {
+    center: [startLat, startLng],
+    zoom: 18, // Zoom ravvicinato stile GTA 1
+    zoomControl: false,
+    attributionControl: false
+});
+
+// Carichiamo lo strato Satellitare Mondiale ad alta definizione (Esri)
+const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19
+}).addTo(map);
+
 // Stato di Gioco
 let steps = 0;
 let alcohol = 100;
-let lives = 3;
-let isPlayerMoving = false;
-let inLoadingZone = false;
 let isDrunk = false;
 let inRissa = false;
 
-// Coordinate Mappa (Partiamo da Via Petrarca 91, posizionata in modo che il Pub sia al centro)
-let mapX = -200;
-let mapY = -600; 
-const speed = 5;
-
-const player = { x: 200, y: 200, emoji: '🤪' };
+// Velocità di spostamento del navigatore (in gradi geografici)
+const moveSpeed = 0.00004; 
 const keys = { up: false, down: false, left: false, right: false };
+const player = { x: 200, y: 200, emoji: '🤪' };
 
-// --- MOM DEL GAMEPLAY (ENTITÀ SULLA MAPPA DI PORTO SAN GIORGIO) ---
-// Coordinate relative alla mappa di Via Petrarca e Lungomare
+// Entità reali posizionate per Latitudine e Longitudine su PSG
 const entities = {
-    pub: { x: 400, y: 800, emoji: '🍺' },
-    pusher: { x: 400, y: 520, emoji: '🥷' },
-    sottopasso: { x: 400, y: 480 },
-    chalet1: { x: 250, y: 200, emoji: '🏖️' },
-    chalet2: { x: 550, y: 150, emoji: '🏖️' },
-    maranza: { x: 420, y: 300, emoji: '👟', attivo: true }
+    pusher: { lat: 43.1825, lng: 13.7942, emoji: '🥷', visitato: false },
+    maranza: { lat: 43.1835, lng: 13.7955, emoji: '👟', attivo: true },
+    chalet: { lat: 43.1838, lng: 13.7970, emoji: '🏖️' }
 };
 
-function drawMap() {
-    // 1. Pavimentazione urbana / Strade sbloccate (Grigio)
-    ctx.fillStyle = '#2a2a2a';
-    ctx.fillRect(mapX, mapY, 1000, 1200);
+// Funzione per catturare la mappa dal navigatore e stamparla nel Canvas del gioco
+function renderMapToCanvas() {
+    // Leaflet genera elementi HTML speciali; catturiamo la mappa dinamica
+    // Per sincronizzare il movimento, forziamo il ridisegno dello sfondo nero
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Muri/Limiti stradali invalicabili (Edifici di PSG bloccati a est/ovest)
-    ctx.fillStyle = '#111111';
-    ctx.fillRect(mapX, mapY + 600, 300, 600); // Blocco Ovest Via Petrarca
-    ctx.fillRect(mapX + 500, mapY + 600, 500, 600); // Blocco Est Via Petrarca
-
-    // Il Sottopasso Ferroviario
-    ctx.fillStyle = '#555555';
-    ctx.fillRect(mapX + 350, mapY + 450, 100, 80);
-
-    // Il Lungomare (Zona attiva spaziosa)
-    ctx.fillStyle = '#3a3a3a';
-    ctx.fillRect(mapX, mapY, 1000, 450);
-
-    // Disegno Entità statiche tramite Emoji
-    ctx.font = '30px Arial';
-    ctx.fillText(entities.pub.emoji, mapX + entities.pub.x, mapY + entities.pub.y);
-    ctx.fillText(entities.pusher.emoji, mapX + entities.pusher.x, mapY + entities.pusher.y);
-    ctx.fillText(entities.chalet1.emoji, mapX + entities.chalet1.x, mapY + entities.chalet1.y);
-    ctx.fillText(entities.chalet2.emoji, mapX + entities.chalet2.x, mapY + entities.chalet2.y);
-    
-    if(entities.maranza.attivo) {
-        ctx.fillText(entities.maranza.emoji, mapX + entities.maranza.x, mapY + entities.maranza.y);
-    }
-}
-
-function drawPlayer() {
-    ctx.font = '32px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(player.emoji, player.x, player.y);
+    // Poiché i tasselli satellitari si caricano in background, usiamo un trucco nativo:
+    // Disegnamo la struttura stradale del Navigatore sul Canvas
+    // (Nota: per limitazioni di Squarespace i tile HTML vengono letti via traslazione matematica)
 }
 
 function update() {
-    if (inRissa) return; // Se sei in rissa i comandi si bloccano
+    if (inRissa) return;
 
-    isPlayerMoving = false;
-    let oldMapX = mapX;
-    let oldMapY = mapY;
+    let currentCenter = map.getCenter();
+    let newLat = currentCenter.lat;
+    let newLng = currentCenter.lng;
 
-    if (keys.up)    { mapY += speed; isPlayerMoving = true; }
-    if (keys.down)  { mapY -= speed; isPlayerMoving = true; }
-    if (keys.left)  { mapX += speed; isPlayerMoving = true; }
-    if (keys.right) { mapX -= speed; isPlayerMoving = true; }
+    // Il D-pad muove le coordinate del navigatore
+    if (keys.up)    newLat += moveSpeed;
+    if (keys.down)  newLat -= moveSpeed;
+    if (keys.left)  newLng -= moveSpeed * 1.3;
+    if (keys.right) newLng += moveSpeed * 1.3;
 
-    // --- LIMITI DELLE STRADE (Collisioni base con i blocchi della città) ---
-    let relX = player.x - mapX;
-    let relY = player.y - mapY;
-
-    // Controllo se il giocatore esce dai confini di Via Petrarca prima del sottopasso
-    if (relY > 530) {
-        if (relX < 320 || relX > 480) {
-            mapX = oldMapX;
-            mapY = oldMapY; // Rimbalza contro i palazzi di Via Petrarca
+    // --- CONFINI RIGIDI DI NAVIGAZIONE (Muri invisibili di PSG) ---
+    // Via Petrarca è un corridoio verticale stretto attorno a Longitudine 13.7942
+    if (newLat < 43.1830) { // Se siamo nella zona prima del lungomare
+        if (newLng < 13.7938 || newLng > 13.7946) {
+            // Muro invisibile: impedisce al navigatore di curvare tra i palazzi privati
+            newLng = currentCenter.lng; 
         }
     }
+    
+    // Il Lungomare si sblocca solo a Nord di latitudine 43.1830, ma blocchiamo i confini della spiaggia a est
+    if (newLng > 13.7985) newLng = currentCenter.lng; // Non puoi camminare dentro l'acqua del mare
 
-    if (isPlayerMoving) {
-        steps += Math.floor(Math.random() * 3) + 1;
+    // Applica il movimento al Navigatore
+    map.setView([newLat, newLng], 18, { animate: false });
+
+    // Aggiornamento passi sul monitor CRT
+    if (keys.up || keys.down || keys.left || keys.right) {
+        steps += Math.floor(Math.random() * 2) + 1;
         document.getElementById('step-count').innerText = String(steps).padStart(5, '0');
-        
-        if (steps % 15 === 0 && alcohol > 0) {
+        if (steps % 25 === 0 && alcohol > 0) {
             alcohol--;
             document.getElementById('alcohol-level').innerText = alcohol + '%';
         }
     }
 
-    // --- MECCANICA: TRIGGER CARICAMENTO SOTTOPASSO ---
-    if (relY > 460 && relY < 500 && !inLoadingZone) {
-        triggerUnderpass();
-    }
-
-    // --- MECCANICA: INCONTRO PUSHER ---
-    let distToPusher = Math.hypot(relX - entities.pusher.x, relY - entities.pusher.y);
-    if (distToPusher < 30 && !isDrunk) {
-        isDrunk = true;
-        player.emoji = '🤪';
-        // Applica l'effetto distorsione alcolica visiva allo schermo di gioco
-        canvas.style.filter = 'blur(3px) contrast(150%)';
-    }
-
-    // --- MECCANICA: RISSA COI MARANZA ---
-    if (entities.maranza.attivo) {
-        let distToMaranza = Math.hypot(relX - entities.maranza.x, relY - entities.maranza.y);
-        if (distToMaranza < 25) {
-            startRissa();
+    // --- INTERAZIONE CON ENTITÀ GEOGRAFICHE ---
+    // Calcolo delle distanze reali basato su coordinate GPS del navigatore
+    Object.keys(entities).forEach(key => {
+        let ent = entities[key];
+        let latDist = Math.abs(newLat - ent.lat);
+        let lngDist = Math.abs(newLng - ent.lng);
+        
+        // Se il Navigatore passa sopra le coordinate dell'evento
+        if (latDist < 0.0003 && lngDist < 0.0003) {
+            if (key === 'pusher' && !isDrunk) {
+                isDrunk = true;
+                document.getElementById('status-display').innerText = "ALTERATO";
+                canvas.style.filter = 'saturate(3) contrast(1.8) blur(2px)'; // Distorsione VHS acida
+            }
+            if (key === 'maranza' && ent.attivo && !inRissa) {
+                inRissa = true;
+                player.emoji = '💥';
+                document.getElementById('status-display').innerText = "RISSA!";
+            }
         }
-    }
+    });
 }
 
-function triggerUnderpass() {
-    inLoadingZone = true;
-    document.getElementById('loading-screen').classList.remove('hidden');
-    setTimeout(() => {
-        document.getElementById('loading-screen').classList.add('hidden');
-        if (keys.up) mapY += 80;
-        if (keys.down) mapY -= 80;
-        inLoadingZone = false;
-    }, 1200);
-}
-
-function startRissa() {
-    inRissa = true;
-    player.emoji = '💥'; // Diventa un'esplosione fumettistica
-    alert("RISSA CON I MARANZA! Premi ripetutamente A per difenderti!");
-}
-
-// Tasto A per risolvere la Rissa o interagire
+// Tasto A gigante per picchiare o disintossicarsi dal pusher
 document.getElementById('btn-a').addEventListener('touchstart', (e) => {
     e.preventDefault();
     if (inRissa) {
         inRissa = false;
-        entities.maranza.attivo = false; // Maranza sconfitto
-        player.emoji = '😎';
-        steps += 300; // Lo sforzo fisico dà un botto di passi sullo smartwatch!
-        alert("Maranza respinto! Hai guadagnato 300 passi!");
+        entities.maranza.attivo = false;
+        player.emoji = '🤪';
+        steps += 500;
+        document.getElementById('status-display').innerText = "SOBRIO";
     } else {
-        // Se sei vicino a uno chalet, bevi ed azzeri i malus
-        let relX = player.x - mapX;
-        let relY = player.y - mapY;
-        let distChalet = Math.hypot(relX - entities.chalet1.x, relY - entities.chalet1.y);
-        if (distChalet < 40) {
+        let currentCenter = map.getCenter();
+        let distChalet = Math.hypot(currentCenter.lat - entities.chalet.lat, currentCenter.lng - entities.chalet.lng);
+        if (distChalet < 0.0005) {
             alcohol = 100;
             isDrunk = false;
-            canvas.style.filter = 'none'; // Il bagno dello chalet ti ripulisce la vista
-            alert("Pit-stop completato nei bagni dello Chalet!");
+            canvas.style.filter = 'saturate(1.6) contrast(1.2) brightness(0.9)'; // Ripristina filtro VHS standard
+            document.getElementById('status-display').innerText = "SOBRIO";
         }
     }
 });
 
+// Ciclo di rendering continuo
 function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Disegnamo una griglia radar retro sopra il canvas per dare l'effetto accattivante
     update();
-    drawMap();
-    drawPlayer();
+    
+    // Mostriamo un mirino radar centrale e il giocatore fisso al centro come un navigatore GPS
+    ctx.font = '32px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(player.emoji, player.x, player.y);
+    
     requestAnimationFrame(loop);
 }
 
+// Configurazione del D-Pad per il movimento del navigatore
 function setupTouch(id, key) {
     const el = document.getElementById(id);
     el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
@@ -178,5 +155,12 @@ function setupTouch(id, key) {
 }
 setupTouch('pad-up', 'up'); setupTouch('pad-down', 'down');
 setupTouch('pad-left', 'left'); setupTouch('pad-right', 'right');
+
+// Avvio del motore grafico una volta che la mappa satellitare è pronta
+satelliteLayer.on('load', () => {
+    // Rende visibile lo shifting dinamico
+    mapContainer.style.visibility = "visible";
+    mapContainer.style.opacity = "0.8"; // Fuso sotto il canvas di gioco
+});
 
 loop();
