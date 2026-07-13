@@ -8,31 +8,24 @@
 </head>
 <body>
 
-    <!-- Scocca del Magoo Boy -->
     <div id="magoo-boy">
-        
-        <!-- Schermo Quadrato di Gioco -->
         <div id="screen-container">
             <canvas id="gameCanvas" width="400" height="400"></canvas>
             
-            <!-- Schermata di Caricamento Sottopasso -->
             <div id="loading-screen" class="hidden">
                 <div class="loader-content">
-                    <div class="orange-head-placeholder"></div>
-                    <p>ATTRAVERSAMENTO SOTTOPASSO...</p>
+                    <p class="blink">ATTRAVERSAMENTO SOTTOPASSO...</p>
                 </div>
             </div>
         </div>
 
-        <!-- Info Hub (Smartwatch Contapassi integrato sotto lo schermo) -->
-        <div id="smartwatch-display">
-            <span>PASSI: <strong id="step-count">0</strong></span>
-            <span>ALCOOL: <strong id="alcohol-level">100%</strong></span>
+        <div id="crt-monitor">
+            <div class="crt-line">PASSI COMPLUTI: <span id="step-count">00000</span></div>
+            <div class="crt-line">CARBURANTE ALCOOL: <span id="alcohol-level">100%</span></div>
+            <div class="crt-line">VITE: <span id="lives-display">❤️❤️❤️</span></div>
         </div>
 
-        <!-- Controlli Fisici Simil-GameBoy -->
         <div id="controls">
-            <!-- D-Pad (Croce Direzionale) -->
             <div id="d-pad">
                 <div class="pad-btn up" id="pad-up"></div>
                 <div class="pad-btn left" id="pad-left"></div>
@@ -41,7 +34,6 @@
                 <div class="pad-center"></div>
             </div>
 
-            <!-- Tasti Azione A e B -->
             <div id="action-buttons">
                 <button id="btn-b" class="action-btn">B</button>
                 <button id="btn-a" class="action-btn">A</button>
