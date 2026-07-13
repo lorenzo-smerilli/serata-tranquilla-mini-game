@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stasera, serata tranquilla - Cosarium</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Scocca del Magoo Boy -->
+    <div id="magoo-boy">
+        
+        <!-- Schermo Quadrato di Gioco -->
+        <div id="screen-container">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            
+            <!-- Schermata di Caricamento Sottopasso -->
+            <div id="loading-screen" class="hidden">
+                <div class="loader-content">
+                    <div class="orange-head-placeholder"></div>
+                    <p>ATTRAVERSAMENTO SOTTOPASSO...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Hub (Smartwatch Contapassi integrato sotto lo schermo) -->
+        <div id="smartwatch-display">
+            <span>PASSI: <strong id="step-count">0</strong></span>
+            <span>ALCOOL: <strong id="alcohol-level">100%</strong></span>
+        </div>
+
+        <!-- Controlli Fisici Simil-GameBoy -->
+        <div id="controls">
+            <!-- D-Pad (Croce Direzionale) -->
+            <div id="d-pad">
+                <div class="pad-btn up" id="pad-up"></div>
+                <div class="pad-btn left" id="pad-left"></div>
+                <div class="pad-btn right" id="pad-right"></div>
+                <div class="pad-btn down" id="pad-down"></div>
+                <div class="pad-center"></div>
+            </div>
+
+            <!-- Tasti Azione A e B -->
+            <div id="action-buttons">
+                <button id="btn-b" class="action-btn">B</button>
+                <button id="btn-a" class="action-btn">A</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
