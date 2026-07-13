@@ -1,46 +1,94 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stasera, serata tranquilla - Cosarium</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+* {
+    box-sizing: border-box;
+    margin: 0; padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
 
-    <div id="magoo-boy">
-        <div id="screen-container">
-            <canvas id="gameCanvas" width="400" height="400"></canvas>
-            
-            <div id="loading-screen" class="hidden">
-                <div class="loader-content">
-                    <p class="blink">ATTRAVERSAMENTO SOTTOPASSO...</p>
-                </div>
-            </div>
-        </div>
+body {
+    background-color: #f7f4eb;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh;
+    font-family: 'Courier New', Courier, monospace;
+    overflow: hidden;
+}
 
-        <div id="crt-monitor">
-            <div class="crt-line">PASSI COMPLUTI: <span id="step-count">00000</span></div>
-            <div class="crt-line">CARBURANTE ALCOOL: <span id="alcohol-level">100%</span></div>
-            <div class="crt-line">VITE: <span id="lives-display">❤️❤️❤️</span></div>
-        </div>
+#magoo-boy {
+    width: 100vw; max-width: 430px;
+    height: 100vh; max-height: 850px;
+    border: 6px solid #ff5500;
+    background-color: #f7f4eb;
+    display: flex; flex-direction: column;
+    padding: 15px; justify-content: space-between;
+}
 
-        <div id="controls">
-            <div id="d-pad">
-                <div class="pad-btn up" id="pad-up"></div>
-                <div class="pad-btn left" id="pad-left"></div>
-                <div class="pad-btn right" id="pad-right"></div>
-                <div class="pad-btn down" id="pad-down"></div>
-                <div class="pad-center"></div>
-            </div>
+#screen-container {
+    width: 100%; aspect-ratio: 1 / 1;
+    border: 4px solid #ff5500;
+    background-color: #000;
+    position: relative;
+    overflow: hidden;
+}
 
-            <div id="action-buttons">
-                <button id="btn-b" class="action-btn">B</button>
-                <button id="btn-a" class="action-btn">A</button>
-            </div>
-        </div>
-    </div>
+/* Applichiamo il filtro Retro/VHS all'intero schermo di gioco */
+#gameCanvas { 
+    width: 100%; 
+    height: 100%; 
+    display: block; 
+    filter: saturate(1.6) contrast(1.2) brightness(0.9);
+}
 
-    <script src="script.js"></script>
-</body>
-</html>
+#map-hidden {
+    position: absolute;
+    width: 100%; height: 100%;
+    visibility: hidden; /* Resta nascosto perché iniettiamo i frame nel canvas */
+    z-index: 0;
+}
+
+/* SCHERMETTO CRT */
+#crt-monitor {
+    width: 100%;
+    background-color: #050505;
+    border: 3px solid #ff5500;
+    padding: 12px;
+    color: #ff5500;
+    font-weight: bold;
+    font-size: 1.1rem;
+    box-shadow: inset 0 0 10px rgba(255, 85, 0, 0.5);
+    position: relative;
+}
+
+#crt-monitor::before {
+    content: " ";
+    display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+    z-index: 2; background-size: 100% 4px;
+    pointer-events: none;
+}
+
+.crt-line { margin-bottom: 4px; text-shadow: 0 0 4px #ff5500; }
+
+/* CONTROLLI E TASTI GIGANTI */
+#controls { display: flex; justify-content: space-between; align-items: center; width: 100%; height: 220px; }
+#d-pad { position: relative; width: 140px; height: 140px; }
+.pad-btn { position: absolute; background-color: #f7f4eb; border: 4px solid #ff5500; }
+.pad-center { position: absolute; top: 46px; left: 46px; width: 48px; height: 48px; background-color: #f7f4eb; }
+.up { top: 0; left: 46px; width: 48px; height: 50px; border-bottom: none; border-radius: 6px 6px 0 0; }
+.down { bottom: 0; left: 46px; width: 48px; height: 50px; border-top: none; border-radius: 0 0 6px 6px; }
+.left { top: 46px; left: 0; width: 50px; height: 48px; border-right: none; border-radius: 6px 0 0 6px; }
+.right { top: 46px; right: 0; width: 50px; height: 48px; border-left: none; border-radius: 0 6px 6px 0; }
+.pad-btn:active { background-color: #ff5500; }
+
+#action-buttons { display: flex; gap: 25px; transform: rotate(-10deg); }
+.action-btn {
+    width: 75px; height: 75px;
+    border-radius: 50%; border: 4px solid #ff5500;
+    background-color: #f7f4eb; color: #ff5500;
+    font-size: 1.8rem; font-weight: bold;
+    box-shadow: 0 4px 0 #ff5500;
+}
+.action-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0px 0 #ff5500;
+    background-color: #ff5500; color: #f7f4eb;
+}
