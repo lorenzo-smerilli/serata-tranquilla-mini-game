@@ -3,28 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stasera, serata tranquilla - Cosarium</title>
+    <title>Navigatore PSG Retro - Cosarium</title>
+    <!-- Includiamo la libreria del Navigatore -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="magoo-boy">
+        <!-- CONTENITORE SCHERMO -->
         <div id="screen-container">
+            <!-- Il Navigatore vero e proprio lavora qui sotto -->
+            <div id="map-hidden"></div>
+            <!-- Il Canvas applica i filtri grafici e disegna il gameplay sopra Maps -->
             <canvas id="gameCanvas" width="400" height="400"></canvas>
-            
-            <div id="loading-screen" class="hidden">
-                <div class="loader-content">
-                    <p class="blink">ATTRAVERSAMENTO SOTTOPASSO...</p>
-                </div>
-            </div>
         </div>
 
+        <!-- MONITOR CRT DATI SMARTWATCH -->
         <div id="crt-monitor">
-            <div class="crt-line">PASSI COMPLUTI: <span id="step-count">00000</span></div>
-            <div class="crt-line">CARBURANTE ALCOOL: <span id="alcohol-level">100%</span></div>
-            <div class="crt-line">VITE: <span id="lives-display">❤️❤️❤️</span></div>
+            <div class="crt-line">PASSI: <span id="step-count">00000</span></div>
+            <div class="crt-line">ALCOOL: <span id="alcohol-level">100%</span></div>
+            <div class="crt-line">STATO: <span id="status-display">SOBRIO</span></div>
         </div>
 
+        <!-- CONTROLLI GIGANTI -->
         <div id="controls">
             <div id="d-pad">
                 <div class="pad-btn up" id="pad-up"></div>
